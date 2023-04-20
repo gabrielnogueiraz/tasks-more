@@ -54,9 +54,12 @@
 }
 
 .link {
-   background-color: #f1f1f1;
+   background-color: #FFF;
    color: #0f0f0f;
    padding: 4px 14px;
    border-radius: 4px;
    margin: 0 14px;
+   font-size: 25px;
+   display: flex;
+   align-items: center;
 }
