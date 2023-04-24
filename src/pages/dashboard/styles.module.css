@@ -52,6 +52,7 @@
    background-color: #3183ff;
    padding: 12px 0;
    font-size: 18px;
+   cursor: pointer;
 }
 
 .taskContainer {
