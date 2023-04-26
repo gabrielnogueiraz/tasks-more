@@ -33,7 +33,7 @@ export default function Header() {
         )}
         {session?.user && (
           <Link className={styles.link} href="/dashboard">
-            <BsFillPersonFill />
+            Meu Painel
           </Link>
         )}
       </section>
