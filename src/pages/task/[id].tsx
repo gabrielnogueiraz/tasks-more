@@ -4,7 +4,8 @@ import { GetServerSideProps } from "next";
 import Head from "next/head";
 import styles from "./styles.module.css";
 
-import { db } from "../../services/firebaseConnection";
+import { db, auth } from "../../services/firebaseConnection";
+import { useFirebaseAuth } from "../../hooks/useFirebaseAuth";
 import {
   doc,
   collection,
@@ -40,6 +41,7 @@ interface CommentProps {
 
 export default function Task({ item, allComments }: TaskProps) {
   const { data: session } = useSession();
+  const { user: firebaseUser, loading } = useFirebaseAuth();
 
   const [input, setInput] = useState("");
   const [comments, setComments] = useState<CommentProps[]>(allComments || []);
@@ -49,22 +51,22 @@ export default function Task({ item, allComments }: TaskProps) {
 
     if (input === "") return;
 
-    if (!session?.user?.email || !session?.user?.name) return;
+    if (!firebaseUser?.email || !firebaseUser?.displayName) return;
 
     try {
       const docRef = await addDoc(collection(db, "comments"), {
         comment: input,
         created: new Date(),
-        user: session?.user?.email,
-        name: session?.user?.name,
+        user: firebaseUser.email,
+        name: firebaseUser.displayName,
         taskId: item?.taskId,
       });
 
       const data = {
         id: docRef.id,
         comment: input,
-        user: session?.user?.email,
-        name: session?.user?.name,
+        user: firebaseUser.email,
+        name: firebaseUser.displayName,
         taskId: item?.taskId,
       };
 
@@ -113,7 +115,7 @@ export default function Task({ item, allComments }: TaskProps) {
               setInput(event.target.value)
             }
           />
-          <button className={styles.button} disabled={!session?.user}>
+          <button className={styles.button} disabled={!firebaseUser}>
             Enviar Comentário
           </button>
         </form>
@@ -129,7 +131,7 @@ export default function Task({ item, allComments }: TaskProps) {
           <article key={item.id} className={styles.comment}>
             <div className={styles.headComment}>
               <label className={styles.commentsLabel}>{item.name}</label>
-              {item.user === session?.user?.email && (
+              {item.user === firebaseUser?.email && (
                 <button
                   className={styles.buttonTrash}
                   onClick={() => handleDeleteComment(item.id)}
