@@ -1,5 +1,5 @@
 import { GetStaticProps } from "next";
-import styles from "../../styles/home.module.css";
+import styles from "../../styles/Home.module.css";
 import heroImg from "../../public/assets/hero.png";
 import Image from "next/image";
 
