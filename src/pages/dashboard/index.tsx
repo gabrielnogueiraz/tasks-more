@@ -1,5 +1,5 @@
 import { GetServerSideProps } from "next";
-import { ChangeEvent, FormEvent, useState, useEffect, use } from "react";
+import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 import styles from "./styles.module.css";
 import Head from "next/head";
 
@@ -8,7 +8,8 @@ import { Textarea } from "../../components/textarea";
 import { FiShare2 } from "react-icons/fi";
 import { FaTrash } from "react-icons/fa";
 
-import { db } from "../../services/firebaseConnection";
+import { db, auth } from "../../services/firebaseConnection";
+import { useFirebaseAuth } from "../../hooks/useFirebaseAuth";
 
 import {
   addDoc,
@@ -37,17 +38,20 @@ interface TaskProps {
 }
 
 export default function Dashboard({ user }: HomeProps) {
+  const { user: firebaseUser, loading } = useFirebaseAuth();
   const [input, setInput] = useState("");
   const [publicTask, setPublicTask] = useState(false);
   const [tasks, setTasks] = useState<TaskProps[]>([]);
 
   useEffect(() => {
+    if (!firebaseUser || loading) return;
+
     async function loadTarefas() {
       const tarefasRef = collection(db, "tarefas");
       const q = query(
         tarefasRef,
         orderBy("created", "desc"),
-        where("user", "==", user?.email)
+        where("user", "==", firebaseUser?.email)
       );
 
       onSnapshot(q, (snapshot) => {
@@ -68,7 +72,7 @@ export default function Dashboard({ user }: HomeProps) {
     }
 
     loadTarefas();
-  }, [user?.email]);
+  }, [firebaseUser, loading]);
 
   function handleChangePublic(event: ChangeEvent<HTMLInputElement>) {
     console.log(event.target.checked);
@@ -78,13 +82,13 @@ export default function Dashboard({ user }: HomeProps) {
   async function handleRegisterTask(event: FormEvent) {
     event.preventDefault();
 
-    if (input === "") return;
+    if (input === "" || !firebaseUser) return;
 
     try {
       await addDoc(collection(db, "tarefas"), {
         tarefa: input,
         created: new Date(),
-        user: user?.email,
+        user: firebaseUser.email,
         public: publicTask,
       });
 
@@ -108,6 +112,32 @@ export default function Dashboard({ user }: HomeProps) {
   async function handleDeleteTask(id: string) {
     const docRef = doc(db, "tarefas", id);
     await deleteDoc(docRef);
+  }
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <Head>
+          <title>Meu painel de tarefas</title>
+        </Head>
+        <main className={styles.main}>
+          <div>Carregando...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!firebaseUser) {
+    return (
+      <div className={styles.container}>
+        <Head>
+          <title>Meu painel de tarefas</title>
+        </Head>
+        <main className={styles.main}>
+          <div>Você precisa estar logado para acessar esta página.</div>
+        </main>
+      </div>
+    );
   }
 
   return (
