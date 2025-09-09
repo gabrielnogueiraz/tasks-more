@@ -6,7 +6,7 @@ export function useFirebaseAuth() {
   const user = session?.user ? {
     email: session.user.email,
     displayName: session.user.name,
-    uid: session.user.id || session.user.email,
+    uid: (session.user as any).id || session.user.email,
   } : null;
 
   const loading = status === 'loading';
